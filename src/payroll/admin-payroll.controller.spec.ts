@@ -1,37 +1,26 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AdminPayrollController } from './admin-payroll.controller';
 import { PayrollService } from './payroll.service';
-import { getRepositoryToken } from '@nestjs/typeorm';
-import { PayrollPeriod } from './entities/payroll-period.entity';
-import { Payslip } from './entities/payslip.entity';
-import { Overtime } from './entities/overtime.entity';
-import { Reimbursement } from './entities/reimbursement.entity';
-import { User } from '../users/entities/user.entity';
-import { Attendance } from '../attendance/entities/attendance.entity';
-import { Salary } from './entities/salary.entity';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { CreatePayrollPeriodDto } from './dto/create-payroll-period.dto';
+import { PayrollPeriod } from './entities/payroll-period.entity';
 
 describe('AdminPayrollController', () => {
   let controller: AdminPayrollController;
   let service: PayrollService;
 
   const mockAdminUser = { userId: 'admin-uuid', role: 'admin' };
+  const mockPayrollService = {
+    createPayrollPeriod: jest.fn(),
+    runPayroll: jest.fn(),
+    getPayrollSummary: jest.fn(),
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AdminPayrollController],
-      providers: [
-        PayrollService,
-        { provide: getRepositoryToken(PayrollPeriod), useValue: {} },
-        { provide: getRepositoryToken(Payslip), useValue: {} },
-        { provide: getRepositoryToken(Overtime), useValue: {} },
-        { provide: getRepositoryToken(Reimbursement), useValue: {} },
-        { provide: getRepositoryToken(User), useValue: {} },
-        { provide: getRepositoryToken(Attendance), useValue: {} },
-        { provide: getRepositoryToken(Salary), useValue: {} },
-      ],
+      providers: [{ provide: PayrollService, useValue: mockPayrollService }],
     })
       .overrideGuard(JwtAuthGuard)
       .useValue({ canActivate: () => true })
@@ -47,29 +36,47 @@ describe('AdminPayrollController', () => {
     expect(controller).toBeDefined();
   });
 
-  it('should call createPayrollPeriod on service', async () => {
+  it('should call createPayrollPeriod on service with correct arguments', async () => {
     const dto: CreatePayrollPeriodDto = {
       startDate: new Date('2025-01-01'),
       endDate: new Date('2025-01-31'),
     };
-    const spy = jest
+    const mockIp = '192.168.1.1';
+    jest
       .spyOn(service, 'createPayrollPeriod')
       .mockResolvedValue(new PayrollPeriod());
-    await controller.createPayrollPeriod(mockAdminUser, dto);
-    expect(spy).toHaveBeenCalledWith(dto, mockAdminUser.userId);
+
+    await controller.createPayrollPeriod(mockAdminUser, dto, mockIp);
+
+    expect(service.createPayrollPeriod).toHaveBeenCalledWith(
+      dto,
+      mockAdminUser.userId,
+      mockIp,
+    );
   });
 
-  it('should call runPayroll on service', async () => {
+  it('should call runPayroll on service with correct arguments', async () => {
     const periodId = 'some-period-uuid';
-    const spy = jest.spyOn(service, 'runPayroll').mockResolvedValue(undefined);
-    await controller.runPayroll(mockAdminUser, periodId);
-    expect(spy).toHaveBeenCalledWith(periodId, mockAdminUser.userId);
+    const mockIp = '192.168.1.1';
+    const mockReq = { requestId: 'mock-req-id' };
+    jest.spyOn(service, 'runPayroll').mockResolvedValue(undefined);
+
+    await controller.runPayroll(mockAdminUser, periodId, mockIp, mockReq);
+
+    expect(service.runPayroll).toHaveBeenCalledWith(
+      periodId,
+      mockAdminUser.userId,
+      mockIp,
+      mockReq.requestId,
+    );
   });
 
-  it('should call getPayrollSummary on service', async () => {
+  it('should call getPayrollSummary on service with correct arguments', async () => {
     const periodId = 'some-period-uuid';
-    const spy = jest.spyOn(service, 'getPayrollSummary').mockResolvedValue({});
+    jest.spyOn(service, 'getPayrollSummary').mockResolvedValue({});
+
     await controller.getPayrollSummary(periodId);
-    expect(spy).toHaveBeenCalledWith(periodId);
+
+    expect(service.getPayrollSummary).toHaveBeenCalledWith(periodId);
   });
 });

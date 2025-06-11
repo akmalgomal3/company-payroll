@@ -34,14 +34,15 @@ For more in-depth documentation, please refer to the following document:
 
 ## Key Features
 
-- **Role-Based Management**: Clear separation of roles between **Admin** and **Employee**.
-- **Secure Authentication**: Utilizes **JWT (JSON Web Token)** to secure endpoints.
-- **Payroll Management**: Admins can create payroll periods and execute the salary calculation process.
-- **Employee Activities**: Employees can submit daily attendance, overtime requests, and reimbursement claims.
-- **Automated Salary Calculation**: Salaries are calculated based on attendance (prorated) and supplemented with overtime pay and reimbursements.
-- **Payslips & Reports**: Employees can view their own payslips, and admins can view a summary of the payroll run.
-- **API Documentation**: Auto-generated, interactive API documentation using **Swagger (OpenAPI)**.
-- **Automated Testing**: Comes with Unit, Integration, and E2E tests to ensure code quality.
+- Role-Based Management: Clear separation of roles between Admin and Employee.
+- Secure Authentication: Utilizes JWT (JSON Web Token) to secure endpoints.
+- Advanced Traceability: Full audit trail with user tracking (created_by, updated_by), IP address logging, request IDs for tracing, and a dedicated audit log table for significant events.
+- Payroll Management: Admins can create payroll periods and execute the salary calculation process.
+- Employee Activities: Employees can submit daily attendance, overtime requests, and reimbursement claims.
+- Automated Salary Calculation: Salaries are calculated based on attendance (prorated) and supplemented with overtime pay and reimbursements.
+- Payslips & Reports: Employees can view their own payslips, and admins can view a summary of the payroll run.
+- API Documentation: Auto-generated, interactive API documentation using Swagger (OpenAPI).
+- Comprehensive Testing Suite: Includes Unit and Integration testing.
 
 ## Software Architecture
 
@@ -60,7 +61,7 @@ The **Dependency Injection (DI)** pattern is used extensively to connect these l
 - **Database**: PostgreSQL
 - **ORM**: TypeORM
 - **Authentication**: Passport.js (JWT Strategy)
-- **Testing**: Jest, Supertest
+- **Testing**: NestJS Testing Utilities
 - **Documentation**: Swagger
 - **Others**: `class-validator`, `date-fns`, `bcrypt`, `crypto-js`
 
@@ -80,13 +81,9 @@ Ensure you have the following software installed:
 ### Installation
 
 1.  **Clone the repository:**
-    ```bash
-    git clone https://github.com/your-username/payslip-project.git
-    ```
+
 2.  **Navigate to the project directory:**
-    ```bash
-    cd payslip-project
-    ```
+
 3.  **Install all dependencies:**
     ```bash
     yarn install
@@ -141,11 +138,6 @@ Ensure you have the following software installed:
 - **Run tests in watch mode:**
   ```bash
   yarn test:watch
-  ```
-- **Run End-to-End (E2E) tests:**
-  Ensure your test database is configured.
-  ```bash
-  yarn test:e2e
   ```
 
 ## API Usage
