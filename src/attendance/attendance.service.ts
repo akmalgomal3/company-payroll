@@ -13,6 +13,7 @@ export class AttendanceService {
 
   async submitAttendance(
     userId: string,
+    ipAddress: string,
   ): Promise<{ message: string; attendance: Attendance }> {
     const today = new Date();
 
@@ -45,6 +46,7 @@ export class AttendanceService {
       checkInTime: today,
       createdBy: userId,
       updatedBy: userId,
+      ipAddress: ipAddress,
     });
 
     const savedAttendance = await this.attendanceRepository.save(newAttendance);

@@ -10,6 +10,7 @@ import { Reimbursement } from './entities/reimbursement.entity';
 import { Salary } from './entities/salary.entity';
 import { User } from '../users/entities/user.entity';
 import { Attendance } from '../attendance/entities/attendance.entity';
+import { AuditModule } from '../audit/audit.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { Attendance } from '../attendance/entities/attendance.entity';
       User,
       Attendance,
     ]),
+    AuditModule,
   ],
   controllers: [AdminPayrollController, EmployeePayrollController],
   providers: [PayrollService],

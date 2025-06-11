@@ -5,9 +5,10 @@ import {
   Param,
   Get,
   UseGuards,
-  ParseIntPipe,
   HttpCode,
-  HttpStatus, ParseUUIDPipe,
+  HttpStatus,
+  ParseUUIDPipe,
+  Request,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -22,6 +23,7 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { Role } from '../users/enums/role.enum';
 import { AuthUser } from '../auth/decorators/user.decorator';
+import { IpAddress } from '../auth/decorators/ip-address.decorator';
 
 @ApiTags('Admin - Payroll')
 @ApiBearerAuth()
@@ -40,10 +42,12 @@ export class AdminPayrollController {
   async createPayrollPeriod(
     @AuthUser() admin: { userId: string },
     @Body() createPayrollPeriodDto: CreatePayrollPeriodDto,
+    @IpAddress() ip: string,
   ) {
     const period = await this.payrollService.createPayrollPeriod(
       createPayrollPeriodDto,
       admin.userId,
+      ip,
     );
     return {
       message: 'Payroll period created successfully',
@@ -62,8 +66,15 @@ export class AdminPayrollController {
   async runPayroll(
     @AuthUser() admin: { userId: string },
     @Param('periodId', ParseUUIDPipe) periodId: string,
+    @IpAddress() ip: string,
+    @Request() req: any,
   ) {
-    await this.payrollService.runPayroll(periodId, admin.userId);
+    await this.payrollService.runPayroll(
+      periodId,
+      admin.userId,
+      ip,
+      req.requestId,
+    );
     return {
       message: `Payroll for period ID ${periodId} has been processed successfully.`,
     };

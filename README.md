@@ -9,6 +9,7 @@ A backend application for a company's payslip system, built with NestJS, Postgre
 ## Table of Contents
 
 - [About The Project](https://www.google.com/search?q=%23about-the-project)
+- [Paper Documentation](https://www.google.com/search?q=%23additional-documentation)
 - [Key Features](https://www.google.com/search?q=%23key-features)
 - [Software Architecture](https://www.google.com/search?q=%23software-architecture)
 - [Technology Stack](https://www.google.com/search?q=%23technology-stack)
@@ -19,8 +20,6 @@ A backend application for a company's payslip system, built with NestJS, Postgre
     - [Running the Application](https://www.google.com/search?q=%23running-the-application)
     - [Running Tests](https://www.google.com/search?q=%23running-tests)
 - [API Usage](https://www.google.com/search?q=%23api-usage)
-- [Additional Documentation](https://www.google.com/search?q=%23additional-documentation)
-- [License](https://www.google.com/search?q=%23license)
 
 ## About The Project
 
