@@ -1,26 +1,28 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AttendanceController } from './attendance.controller';
 import { AttendanceService } from './attendance.service';
-import { getRepositoryToken } from '@nestjs/typeorm';
-import { Attendance } from './entities/attendance.entity';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
+import { BadRequestException } from '@nestjs/common';
+import { Attendance } from './entities/attendance.entity';
 
 describe('AttendanceController', () => {
   let controller: AttendanceController;
   let service: AttendanceService;
 
-  const mockAttendanceRepository = {};
+  const mockAttendanceService = {
+    submitAttendance: jest.fn(),
+  };
+
   const mockUser = { userId: 'test-user-uuid', role: 'employee' };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AttendanceController],
       providers: [
-        AttendanceService,
         {
-          provide: getRepositoryToken(Attendance),
-          useValue: mockAttendanceRepository,
+          provide: AttendanceService,
+          useValue: mockAttendanceService,
         },
       ],
     })
@@ -39,21 +41,38 @@ describe('AttendanceController', () => {
   });
 
   describe('checkIn', () => {
-    it('should call AttendanceService.submitAttendance with correct userId', async () => {
+    it('should call AttendanceService.submitAttendance with correct userId and ip', async () => {
+      const mockIp = '127.0.0.1';
       const serviceResponse = {
         message: 'Attendance submitted successfully.',
         attendance: { id: 'new-attendance-uuid' } as Attendance,
       };
 
-      const submitAttendanceSpy = jest
+      jest
         .spyOn(service, 'submitAttendance')
         .mockResolvedValue(serviceResponse);
 
-      const result = await controller.checkIn(mockUser);
+      const result = await controller.checkIn(mockUser, mockIp);
 
-      expect(submitAttendanceSpy).toHaveBeenCalledWith(mockUser.userId);
+      expect(service.submitAttendance).toHaveBeenCalledWith(
+        mockUser.userId,
+        mockIp,
+      );
       expect(result.message).toEqual(serviceResponse.message);
       expect(result.data).toEqual(serviceResponse.attendance);
+    });
+
+    it('should propagate exceptions from the service', async () => {
+      const mockIp = '127.0.0.1';
+      jest
+        .spyOn(service, 'submitAttendance')
+        .mockRejectedValue(
+          new BadRequestException('Cannot submit on weekend.'),
+        );
+
+      await expect(controller.checkIn(mockUser, mockIp)).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 });

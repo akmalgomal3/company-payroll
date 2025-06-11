@@ -1,37 +1,29 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { EmployeePayrollController } from './employee-payroll.controller';
 import { PayrollService } from './payroll.service';
-import { getRepositoryToken } from '@nestjs/typeorm';
-import { Overtime } from './entities/overtime.entity';
-import { Reimbursement } from './entities/reimbursement.entity';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { SubmitOvertimeDto } from './dto/submit-overtime.dto';
+import { SubmitReimbursementDto } from './dto/submit-reimbursement.dto';
+import { Overtime } from './entities/overtime.entity';
+import { Reimbursement } from './entities/reimbursement.entity';
 import { Payslip } from './entities/payslip.entity';
-import { PayrollPeriod } from './entities/payroll-period.entity';
-import { User } from '../users/entities/user.entity';
-import { Attendance } from '../attendance/entities/attendance.entity';
-import { Salary } from './entities/salary.entity';
 
 describe('EmployeePayrollController', () => {
   let controller: EmployeePayrollController;
   let service: PayrollService;
 
   const mockEmployeeUser = { userId: 'employee-uuid', role: 'employee' };
+  const mockPayrollService = {
+    submitOvertime: jest.fn(),
+    submitReimbursement: jest.fn(),
+    getEmployeePayslip: jest.fn(),
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [EmployeePayrollController],
-      providers: [
-        PayrollService,
-        { provide: getRepositoryToken(PayrollPeriod), useValue: {} },
-        { provide: getRepositoryToken(Payslip), useValue: {} },
-        { provide: getRepositoryToken(Overtime), useValue: {} },
-        { provide: getRepositoryToken(Reimbursement), useValue: {} },
-        { provide: getRepositoryToken(User), useValue: {} },
-        { provide: getRepositoryToken(Attendance), useValue: {} },
-        { provide: getRepositoryToken(Salary), useValue: {} },
-      ],
+      providers: [{ provide: PayrollService, useValue: mockPayrollService }],
     })
       .overrideGuard(JwtAuthGuard)
       .useValue({ canActivate: () => true })
@@ -49,25 +41,53 @@ describe('EmployeePayrollController', () => {
     expect(controller).toBeDefined();
   });
 
-  it('should call submitOvertime on service', async () => {
+  it('should call submitOvertime on service with correct arguments', async () => {
     const dto: SubmitOvertimeDto = {
       date: new Date(),
       hours: 2,
-      description: 'Test Overtime',
+      description: 'Test OT',
     };
-    const spy = jest
-      .spyOn(service, 'submitOvertime')
-      .mockResolvedValue(new Overtime());
-    await controller.submitOvertime(mockEmployeeUser, dto);
-    expect(spy).toHaveBeenCalledWith(mockEmployeeUser.userId, dto);
+    const mockIp = '127.0.0.1';
+    jest.spyOn(service, 'submitOvertime').mockResolvedValue(new Overtime());
+
+    await controller.submitOvertime(mockEmployeeUser, dto, mockIp);
+
+    expect(service.submitOvertime).toHaveBeenCalledWith(
+      mockEmployeeUser.userId,
+      dto,
+      mockIp,
+    );
   });
 
-  it('should call getMyPayslip on service', async () => {
+  it('should call submitReimbursement on service with correct arguments', async () => {
+    const dto: SubmitReimbursementDto = {
+      date: new Date(),
+      amount: 50000,
+      description: 'Test Reimb',
+    };
+    const mockIp = '127.0.0.1';
+    jest
+      .spyOn(service, 'submitReimbursement')
+      .mockResolvedValue(new Reimbursement());
+
+    await controller.submitReimbursement(mockEmployeeUser, dto, mockIp);
+
+    expect(service.submitReimbursement).toHaveBeenCalledWith(
+      mockEmployeeUser.userId,
+      dto,
+      mockIp,
+    );
+  });
+
+  it('should call getMyPayslip on service with correct arguments', async () => {
     const periodId = 'some-period-uuid';
-    const spy = jest
-      .spyOn(service, 'getEmployeePayslip')
-      .mockResolvedValue(new Payslip());
+    jest.spyOn(service, 'getEmployeePayslip').mockResolvedValue(new Payslip());
+
     await controller.getMyPayslip(mockEmployeeUser, periodId);
-    expect(spy).toHaveBeenCalledWith(mockEmployeeUser.userId, periodId);
+
+    expect(service.getEmployeePayslip).toHaveBeenCalledWith(
+      mockEmployeeUser.userId,
+      periodId,
+    );
   });
 });
