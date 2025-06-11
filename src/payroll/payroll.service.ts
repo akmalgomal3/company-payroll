@@ -21,6 +21,7 @@ import { CreatePayrollPeriodDto } from './dto/create-payroll-period.dto';
 import { SubmitOvertimeDto } from './dto/submit-overtime.dto';
 import { SubmitReimbursementDto } from './dto/submit-reimbursement.dto';
 import { Role } from '../users/enums/role.enum';
+import { AuditService } from '../audit/audit.service';
 
 @Injectable()
 export class PayrollService {
@@ -38,21 +39,29 @@ export class PayrollService {
     @InjectRepository(User) private readonly userRepo: Repository<User>,
     @InjectRepository(Attendance)
     private readonly attendanceRepo: Repository<Attendance>,
+    private readonly auditService: AuditService,
   ) {}
 
   async createPayrollPeriod(
     dto: CreatePayrollPeriodDto,
     adminId: string,
+    ipAddress: string,
   ): Promise<PayrollPeriod> {
     const newPeriod = this.periodRepo.create({
       ...dto,
       createdBy: adminId,
       updatedBy: adminId,
+      ipAddress: ipAddress,
     });
     return this.periodRepo.save(newPeriod);
   }
 
-  async runPayroll(periodId: string, adminId: string): Promise<void> {
+  async runPayroll(
+    periodId: string,
+    adminId: string,
+    ipAddress: string,
+    requestId: string,
+  ): Promise<void> {
     const period = await this.periodRepo.findOneBy({ id: periodId });
     if (!period)
       throw new NotFoundException(
@@ -130,6 +139,7 @@ export class PayrollService {
         takeHomePay,
         createdBy: adminId,
         updatedBy: adminId,
+        ipAddress: ipAddress,
         details: {
           attendance: {
             count: attendanceCount,
@@ -149,27 +159,40 @@ export class PayrollService {
           user: { id: employee.id },
           checkInTime: Between(period.startDate, period.endDate),
         },
-        { isProcessed: true, updatedBy: adminId },
+        { isProcessed: true, updatedBy: adminId, ipAddress: ipAddress },
       );
       await this.overtimeRepo.update(
         {
           userId: employee.id,
           date: Between(period.startDate, period.endDate),
         },
-        { isProcessed: true, updatedBy: adminId },
+        { isProcessed: true, updatedBy: adminId, ipAddress: ipAddress },
       );
       await this.reimbursementRepo.update(
         {
           userId: employee.id,
           date: Between(period.startDate, period.endDate),
         },
-        { isProcessed: true, updatedBy: adminId },
+        { isProcessed: true, updatedBy: adminId, ipAddress: ipAddress },
       );
     }
 
     period.isProcessed = true;
     period.updatedBy = adminId;
+    period.ipAddress = ipAddress;
     await this.periodRepo.save(period);
+
+    await this.auditService.log({
+      userId: adminId,
+      action: 'RUN_PAYROLL',
+      entity: 'PayrollPeriod',
+      entityId: periodId,
+      ipAddress: ipAddress,
+      requestId: requestId, // <-- Simpan requestId
+      details: {
+        message: `Payroll for period ${period.id} was processed successfully.`,
+      },
+    });
   }
 
   async getPayrollSummary(periodId: string): Promise<any> {
@@ -201,6 +224,7 @@ export class PayrollService {
   async submitOvertime(
     userId: string,
     dto: SubmitOvertimeDto,
+    ipAddress: string,
   ): Promise<Overtime> {
     const now = new Date();
     const submissionDate = new Date(dto.date);
@@ -217,6 +241,7 @@ export class PayrollService {
       userId: userId,
       createdBy: userId,
       updatedBy: userId,
+      ipAddress: ipAddress,
     });
     return this.overtimeRepo.save(newOvertime);
   }
@@ -224,12 +249,14 @@ export class PayrollService {
   async submitReimbursement(
     userId: string,
     dto: SubmitReimbursementDto,
+    ipAddress: string,
   ): Promise<Reimbursement> {
     const newReimbursement = this.reimbursementRepo.create({
       ...dto,
       userId: userId,
       createdBy: userId,
       updatedBy: userId,
+      ipAddress: ipAddress,
     });
     return this.reimbursementRepo.save(newReimbursement);
   }

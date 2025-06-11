@@ -6,11 +6,16 @@ import { ConfigService } from '@nestjs/config';
 import { HttpExceptionFilter } from './shared/filters/http-exception.filter';
 import { TransformInterceptor } from './shared/interceptors/transform.interceptor';
 import * as dotenv from 'dotenv';
+import { ExpressAdapter } from '@nestjs/platform-express';
+import * as express from 'express';
 
 dotenv.config({ override: true });
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const server = express();
+  const app = await NestFactory.create(AppModule, new ExpressAdapter(server));
+  server.set('trust proxy', true);
+
   const configService = app.get(ConfigService);
 
   // Global Pipes, Filters, Interceptors

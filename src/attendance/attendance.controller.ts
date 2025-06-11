@@ -17,6 +17,7 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { Role } from '../users/enums/role.enum';
 import { AuthUser } from '../auth/decorators/user.decorator';
+import { IpAddress } from '../auth/decorators/ip-address.decorator';
 
 @ApiTags('Attendance')
 @ApiBearerAuth()
@@ -37,8 +38,11 @@ export class AttendanceController {
     status: 400,
     description: 'Cannot submit attendance on a weekend',
   })
-  async checkIn(@AuthUser() user: { userId: string }) {
-    const result = await this.attendanceService.submitAttendance(user.userId);
+  async checkIn(@AuthUser() user: { userId: string }, @IpAddress() ip: string) {
+    const result = await this.attendanceService.submitAttendance(
+      user.userId,
+      ip,
+    );
     return {
       message: result.message,
       data: result.attendance,

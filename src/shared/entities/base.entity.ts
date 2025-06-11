@@ -26,4 +26,7 @@ export abstract class BaseEntity {
 
   @Column({ type: 'uuid', nullable: true })
   updatedBy: string;
+
+  @Column({ type: 'varchar', length: 45, nullable: true, name: 'ip_address' })
+  ipAddress: string;
 }

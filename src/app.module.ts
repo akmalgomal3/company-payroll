@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
@@ -11,6 +11,8 @@ import { SeederService } from './shared/database/seeder.service';
 import { User } from './users/entities/user.entity';
 import { Salary } from './payroll/entities/salary.entity';
 import { SharedModule } from './shared/shared.module';
+import { AuditModule } from './audit/audit.module';
+import { RequestIdMiddleware } from './shared/middleware/request-id.middleware';
 
 @Module({
   imports: [
@@ -35,6 +37,7 @@ import { SharedModule } from './shared/shared.module';
     TypeOrmModule.forFeature([User, Salary]),
     SharedModule,
     UsersModule,
+    AuditModule,
     AuthModule,
     PayrollModule,
     AttendanceModule,
@@ -42,4 +45,8 @@ import { SharedModule } from './shared/shared.module';
   controllers: [AppController],
   providers: [AppService, SeederService],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(RequestIdMiddleware).forRoutes('*');
+  }
+}

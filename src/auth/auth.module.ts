@@ -8,12 +8,14 @@ import { AuthController } from './auth.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { PasswordHelper } from '../shared/helpers/password.helper';
 import { SharedModule } from '../shared/shared.module';
+import { AuditModule } from '../audit/audit.module';
 
 @Module({
   imports: [
     forwardRef(() => UsersModule),
     PassportModule,
     SharedModule,
+    AuditModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

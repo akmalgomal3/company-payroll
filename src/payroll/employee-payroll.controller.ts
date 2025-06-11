@@ -23,6 +23,7 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { Role } from '../users/enums/role.enum';
 import { AuthUser } from '../auth/decorators/user.decorator';
+import { IpAddress } from '../auth/decorators/ip-address.decorator';
 
 @ApiTags('Employee - Actions')
 @ApiBearerAuth()
@@ -38,10 +39,12 @@ export class EmployeePayrollController {
   async submitOvertime(
     @AuthUser() user,
     @Body() submitOvertimeDto: SubmitOvertimeDto,
+    @IpAddress() ip: string,
   ) {
     const overtime = await this.payrollService.submitOvertime(
       user.userId,
       submitOvertimeDto,
+      ip,
     );
     return {
       message: 'Overtime submitted successfully',
@@ -55,10 +58,12 @@ export class EmployeePayrollController {
   async submitReimbursement(
     @AuthUser() user,
     @Body() submitReimbursementDto: SubmitReimbursementDto,
+    @IpAddress() ip: string,
   ) {
     const reimbursement = await this.payrollService.submitReimbursement(
       user.userId,
       submitReimbursementDto,
+      ip,
     );
     return {
       message: 'Reimbursement submitted successfully',
